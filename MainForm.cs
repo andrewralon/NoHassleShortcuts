@@ -20,18 +20,38 @@ namespace NoHassleShortcuts
 		private string saveFolder = "Shortcuts";
         private string shortcutPath = "";
 
-		private enum ShortcutType { File, Folder, Unknown };
-
         #endregion Fields
 
-        #region Constructor
+        #region Constructors
 
-        public MainForm()
+        public MainForm(string[] args)
         {
             InitializeComponent();
 
 			this.Tag = this.Text;
-			this.Text += " " + Application.ProductVersion + " © Team Ralon";
+			this.Text += " " + Application.ProductVersion + " © " + DateTime.UtcNow.Year + " Team Ralon";
+
+			if (args.Length > 0)
+			{
+				if (args[0] != "")
+				{
+					shortcutPath = args[0];
+					txtPath.Text = args[0];
+					txtPath.Focus();
+					txtPath.Select(txtPath.Text.Length, 0);
+
+					txtBatName.Select();
+					txtBatName.Focus();
+				}
+			}
+
+			if (args.Length > 1)
+			{
+				if (args[1] != "")
+				{
+					txtBatName.Text = args[1];
+				}
+			}
 
 			string cDrive = Environment.GetEnvironmentVariable("SystemDrive");
 			saveFolder = cDrive + "\\" + saveFolder;
@@ -46,22 +66,36 @@ namespace NoHassleShortcuts
 			//ListCurrentShortcuts();
 		}
 
-        #endregion Constructor
+        #endregion Constructors
 
         #region Private Methods
 
         private void Create(string newShortcut)
         {
-			if (txtBatName.Text == "" || shortcutPath == "")
+			if (newShortcut == "")
 			{
-				MessageBox.Show("Please drag in a file or folder and name your shortcut.");
+				MessageBox.Show("Unable to parse the new shortcut name.");
 				return;
 			}
 
+			if (shortcutPath == "")
+			{
+				MessageBox.Show("Please drag in a file or folder to shortcut.");
+				return;
+			}
+
+			if (txtBatName.Text == "")
+			{
+				MessageBox.Show("Type the name of the shortcut.");
+				return;
+			}
+
+			newShortcut += ".bat";
+
 			btnCreateShortcut.Enabled = false;
 
-			ShortcutType type = GetShortcutType();
-			if (type == ShortcutType.Unknown)
+			Admin.ShortcutType type = Admin.GetShortcutType(shortcutPath);
+			if (type == Admin.ShortcutType.Unknown)
 			{
 				MessageBox.Show("Unable to detect a file or folder. Please try again.");
 				return;
@@ -79,16 +113,16 @@ namespace NoHassleShortcuts
 			using (StreamWriter sw = new StreamWriter(savePath, false))
             {
 				sw.WriteLine("@ECHO OFF");
-				sw.WriteLine("REM No Hassle Shortcuts © Team Ralon");
+				sw.WriteLine("REM " + this.Text);
 
-				if (type == ShortcutType.File)
+				if (type == Admin.ShortcutType.File)
 				{
-					sw.WriteLine("REM File: " + savePath);
+					sw.WriteLine("REM <file>\"" + savePath + "\"</file>");
 					sw.WriteLine("START \"\" /D \"" + pathOnly + "\" \"" + filename + "\"");
 				}
-				else if (type == ShortcutType.Folder)
+				else if (type == Admin.ShortcutType.Folder)
 				{
-					sw.WriteLine("REM Folder: " + savePath);
+					sw.WriteLine("REM <folder>\"" + savePath + "\"</folder>");
 					sw.WriteLine("\"%SystemRoot%\\explorer.exe\" \"" + shortcutPath + "\"");
 				}
 
@@ -132,7 +166,7 @@ namespace NoHassleShortcuts
 
 			MessageBox.Show(String.Join(Environment.NewLine, shortcuts.ToArray()));
 
-			// if this absolutely fails, just open the shortcuts folder!
+			// If this absolutely fails, just open the shortcuts folder!
 		}
 
 		private string GetFilename(string path)
@@ -165,23 +199,6 @@ namespace NoHassleShortcuts
 			}
 		}
 
-		private ShortcutType GetShortcutType()
-		{
-			FileAttributes attr = File.GetAttributes(shortcutPath);
-			if ((attr & FileAttributes.Directory) == FileAttributes.Directory)
-			{
-				return ShortcutType.Folder;
-			}
-			else if (File.Exists(shortcutPath))
-			{
-				return ShortcutType.File;
-			}
-			else
-			{
-				return ShortcutType.Unknown;
-			}
-		}
-
         #endregion Private Methods
 
         #region Public Methods
@@ -205,13 +222,13 @@ namespace NoHassleShortcuts
 		{
 			if (e.KeyCode == Keys.Enter)
 			{
-				Create(txtBatName.Text + ".bat");
+				Create(txtBatName.Text);
 			}
 		}
 
         private void btnCreateShortcut_Click(object sender, EventArgs e)
         {
-			Create(txtBatName.Text + ".bat");
+			Create(txtBatName.Text);
         }
 
         #endregion Handlers
