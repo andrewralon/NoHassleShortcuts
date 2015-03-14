@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -29,7 +30,8 @@ namespace NoHassleShortcuts
             InitializeComponent();
 
 			this.Tag = this.Text;
-			this.Text += " " + Application.ProductVersion + " © " + DateTime.UtcNow.Year + " Team Ralon";
+			this.Text += " " + Application.ProductVersion + " © " + DateTime.UtcNow.Year + " TeamRalon";
+			Icon = Properties.Resources.TR_64x64_icon;
 
 			if (args.Length > 0)
 			{
@@ -230,6 +232,11 @@ namespace NoHassleShortcuts
         {
 			Create(txtBatName.Text);
         }
+
+		private void btnOpenShortcuts_Click(object sender, EventArgs e)
+		{
+			Process.Start("\"" + saveFolder + "\"");
+		}
 
         #endregion Handlers
 

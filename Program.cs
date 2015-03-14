@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using TRLibrary;
 
 namespace NoHassleShortcuts
 {
@@ -14,16 +15,19 @@ namespace NoHassleShortcuts
         [STAThread]
         static void Main(string[] args)
         {
-			//string RightClickMenuName = "Make a shortcut to this!";
-			//string RightClickCommandPath = "\"C:\\Shortcuts\\NoHassleShortcuts.exe\" \"%1\"";
+			string folder = "TeamRalon";
+			string menu = "Make a new No Hassle Shortcut!";
+			string command = "\"C:\\Shortcuts\\NoHassleShortcuts.exe\" \"%1\"";
 
-			//TRLibrary.Admin.NewRightClickMenu(RightClickMenuName, RightClickCommandPath, TRLibrary.Admin.ShortcutType.File);
-			//TRLibrary.Admin.NewRightClickMenu(RightClickMenuName, RightClickCommandPath, TRLibrary.Admin.ShortcutType.Folder);
+			Admin.RemoveRightClickMenu(folder, menu, Admin.ShortcutType.File);
+			Admin.RemoveRightClickMenu(folder, menu, Admin.ShortcutType.Folder);
+
+			Admin.NewRightClickMenu(folder, menu, command, Admin.ShortcutType.File);
+			Admin.NewRightClickMenu(folder, menu, command, Admin.ShortcutType.Folder);
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 			Application.Run(new MainForm(args));
-			//Application.Run(new MainForm(new string[] { @"" }));
         }
     }
 }

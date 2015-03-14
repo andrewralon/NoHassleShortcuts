@@ -36,6 +36,7 @@
 			this.btnCreateShortcut = new System.Windows.Forms.Button();
 			this.lblStep3 = new System.Windows.Forms.Label();
 			this.lblStep4 = new System.Windows.Forms.Label();
+			this.btnOpenShortcuts = new System.Windows.Forms.Button();
 			this.SuspendLayout();
 			// 
 			// lblStep1
@@ -116,12 +117,24 @@
 			this.lblStep4.TabIndex = 12;
 			this.lblStep4.Text = "Press Windows + R, type the shortcut name, \r\nand press Enter to use. Enjoy!";
 			// 
+			// btnOpenShortcuts
+			// 
+			this.btnOpenShortcuts.AutoSize = true;
+			this.btnOpenShortcuts.Location = new System.Drawing.Point(115, 390);
+			this.btnOpenShortcuts.Name = "btnOpenShortcuts";
+			this.btnOpenShortcuts.Size = new System.Drawing.Size(169, 30);
+			this.btnOpenShortcuts.TabIndex = 26;
+			this.btnOpenShortcuts.Text = "Open Shortcuts";
+			this.btnOpenShortcuts.UseVisualStyleBackColor = true;
+			this.btnOpenShortcuts.Click += new System.EventHandler(this.btnOpenShortcuts_Click);
+			// 
 			// MainForm
 			// 
 			this.AllowDrop = true;
 			this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(399, 389);
+			this.ClientSize = new System.Drawing.Size(399, 449);
+			this.Controls.Add(this.btnOpenShortcuts);
 			this.Controls.Add(this.lblStep4);
 			this.Controls.Add(this.btnCreateShortcut);
 			this.Controls.Add(this.lblStep3);
@@ -154,6 +167,7 @@
         private System.Windows.Forms.Button btnCreateShortcut;
         private System.Windows.Forms.Label lblStep3;
 		private System.Windows.Forms.Label lblStep4;
+		private System.Windows.Forms.Button btnOpenShortcuts;
     }
 }
 
