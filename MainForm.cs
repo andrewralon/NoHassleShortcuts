@@ -13,31 +13,32 @@ using TRLibrary;
 
 namespace NoHassleShortcuts
 {
-    public partial class MainForm : Form
-    {
-        #region Fields
+	public partial class MainForm : Form
+	{
+		#region Fields
 
-        private OpenFileDialog ofd = new OpenFileDialog();
-		private string saveFolder = "Shortcuts";
-        private string shortcutPath = "";
+		private string shortcutsFolder = "Shortcuts";
+		private string newShortcutPath = "";
 
-        #endregion Fields
+		#endregion Fields
 
-        #region Constructors
+		#region Constructors
 
-        public MainForm(string[] args)
-        {
-            InitializeComponent();
+		public MainForm(string[] args)
+		{
+			InitializeComponent();
 
+			// Set the title and icon
 			this.Tag = this.Text;
 			this.Text += " " + Application.ProductVersion + " © " + DateTime.UtcNow.Year + " TeamRalon";
-			Icon = Properties.Resources.TR_64x64_icon;
+			this.Icon = Properties.Resources.TR2_1024;
 
+			// Set the first argument to the path of the shortcut
 			if (args.Length > 0)
 			{
 				if (args[0] != "")
 				{
-					shortcutPath = args[0];
+					newShortcutPath = args[0];
 					txtPath.Text = args[0];
 					txtPath.Focus();
 					txtPath.Select(txtPath.Text.Length, 0);
@@ -47,6 +48,7 @@ namespace NoHassleShortcuts
 				}
 			}
 
+			// Set the second argument to the name of the shortcut
 			if (args.Length > 1)
 			{
 				if (args[1] != "")
@@ -55,92 +57,100 @@ namespace NoHassleShortcuts
 				}
 			}
 
-			string cDrive = Environment.GetEnvironmentVariable("SystemDrive");
-			saveFolder = cDrive + "\\" + saveFolder;
+			// Set the path of the shortcuts folder
+			shortcutsFolder = Path.Combine(Environment.GetEnvironmentVariable("SystemDrive") + "\\", shortcutsFolder);
 
+			// Update the GUI with the shortcuts folder
 			lblStep3.Tag = lblStep3.Text;
-			lblStep3.Text += saveFolder + ".";
+			lblStep3.Text += shortcutsFolder + ".";
 
-            ofd.Title = "Choose a file or folder to shortcut";
-
-			Admin.AddToPath(saveFolder, true);
+			// Add the shortcuts folder to the system path if it's not already there
+			Admin.AddToPath(shortcutsFolder, true);
 
 			//ListCurrentShortcuts();
 		}
 
-        #endregion Constructors
+		#endregion Constructors
 
-        #region Private Methods
+		#region Private Methods
 
-        private void Create(string newShortcut)
-        {
+		private void Create(string newShortcut)
+		{
+			// Check fields for content
 			if (newShortcut == "")
 			{
-				MessageBox.Show("Unable to parse the new shortcut name.");
+				MessageBox.Show("Please type the new shortcut name.");
 				return;
 			}
 
-			if (shortcutPath == "")
+			if (newShortcutPath == "")
 			{
-				MessageBox.Show("Please drag in a file or folder to shortcut.");
+				MessageBox.Show("Please drag in a file or folder.");
 				return;
 			}
 
-			if (txtBatName.Text == "")
-			{
-				MessageBox.Show("Type the name of the shortcut.");
-				return;
-			}
+			// Is dragged in content a file or a folder? Handle unknown type.
+			Admin.ShortcutType type = Admin.GetShortcutType(newShortcutPath);
 
-			newShortcut += ".bat";
-
-			btnCreateShortcut.Enabled = false;
-
-			Admin.ShortcutType type = Admin.GetShortcutType(shortcutPath);
 			if (type == Admin.ShortcutType.Unknown)
 			{
 				MessageBox.Show("Unable to detect a file or folder. Please try again.");
 				return;
 			}
 
-			string pathOnly = Path.GetDirectoryName(shortcutPath);
-			string filename = Path.GetFileName(shortcutPath);
-			string savePath = Path.Combine(saveFolder, newShortcut);
+			btnCreateShortcut.Enabled = false;
 
-			if (!Directory.Exists(saveFolder))
+			newShortcut += ".bat";
+
+			// Create the shortcuts folder if it doesn't exist already
+			if (!Directory.Exists(shortcutsFolder))
 			{
-				Directory.CreateDirectory(saveFolder);
+				Directory.CreateDirectory(shortcutsFolder);
 			}
 
-			using (StreamWriter sw = new StreamWriter(savePath, false))
-            {
-				sw.WriteLine("@ECHO OFF");
-				sw.WriteLine("REM " + this.Text);
+			// Create the .bat file to shortcuts folder
+			CreateBatFile(newShortcut, type);
 
-				if (type == Admin.ShortcutType.File)
-				{
-					sw.WriteLine("REM <file>\"" + savePath + "\"</file>");
-					sw.WriteLine("START \"\" /D \"" + pathOnly + "\" \"" + filename + "\"");
-				}
-				else if (type == Admin.ShortcutType.Folder)
-				{
-					sw.WriteLine("REM <folder>\"" + savePath + "\"</folder>");
-					sw.WriteLine("\"%SystemRoot%\\explorer.exe\" \"" + shortcutPath + "\"");
-				}
-
-				sw.WriteLine("EXIT");
-				sw.Close();
-            }
-
+			// Make the user feel like something actually happened.... :P
 			System.Threading.Thread.Sleep(300);
 			System.Media.SystemSounds.Beep.Play();
 			btnCreateShortcut.Enabled = true;
-        }
+		}
+
+		private void CreateBatFile(string newShortcut, Admin.ShortcutType type)
+		{
+			var pathOnly = Path.GetDirectoryName(newShortcutPath);
+			var filename = Path.GetFileName(newShortcutPath);
+			var savePath = Path.Combine(shortcutsFolder, newShortcut);
+
+			// Create lines with comments and command based on type (file or folder)
+			List<string> lines = new List<string>();
+
+			lines.Add("@ECHO OFF");
+			lines.Add("REM " + this.Text);
+
+			if (type == Admin.ShortcutType.File)
+			{
+				lines.Add("REM <file>\"" + savePath + "\"</file>");
+				lines.Add("START \"\" /D \"" + pathOnly + "\" \"" + filename + "\"");
+			}
+			else if (type == Admin.ShortcutType.Folder)
+			{
+				lines.Add("REM <folder>\"" + savePath + "\"</folder>");
+				lines.Add("\"%SystemRoot%\\explorer.exe\" \"" + newShortcutPath + "\"");
+			}
+
+			lines.Add("EXIT");
+
+			// Write the file to the given save path
+			File.WriteAllLines(savePath, lines.ToArray());
+		}
 
 		private string FollowLink(string linkPath)
 		{
 			// If it's a shortcut, follow it!
-			string target = Shell.FollowShortcut(linkPath);
+			var target = Shell.FollowShortcut(linkPath);
+
 			if (File.Exists(target) || Directory.Exists(target))
 			{
 				return target;
@@ -150,17 +160,18 @@ namespace NoHassleShortcuts
 			//return Link.ResolveLink(linkPath);
 		}
 
-		private void ListCurrentShortcuts() // LATER!! 
+		private void ListCurrentShortcuts() // TODO - After MVP is working....
 		{
-			string[] bats = Directory.GetFiles(saveFolder, "*.bat", SearchOption.TopDirectoryOnly);
+			var bats = Directory.GetFiles(shortcutsFolder, "*.bat", SearchOption.TopDirectoryOnly);
 
 			List<string> shortcuts = new List<string>();
+
 			shortcuts.Add("Shortcut, File, Path");
 			shortcuts.Add("--------------------");
 
 			List<string> filenames = new List<string>();
 
-			foreach (string bat in bats)
+			foreach (var bat in bats)
 			{
 				filenames.Add(GetFilename(bat));
 				shortcuts.Add(Path.GetFileNameWithoutExtension(bat));
@@ -168,14 +179,14 @@ namespace NoHassleShortcuts
 
 			MessageBox.Show(String.Join(Environment.NewLine, shortcuts.ToArray()));
 
-			// If this absolutely fails, just open the shortcuts folder!
+			// If this absolutely fails, just open the shortcuts folder
 		}
 
-		private string GetFilename(string path)
+		private string GetFilename(string path) // TODO - After MVP is working....
 		{
-			string[] lines = File.ReadAllLines(path);
+			var lines = File.ReadAllLines(path);
 
-			foreach (string line in lines)
+			foreach (var line in lines)
 			{
 
 			}
@@ -186,39 +197,28 @@ namespace NoHassleShortcuts
 		private void SetPath(string path)
 		{
 			// Check if it exists
-			if (path != "" && (File.Exists(path) || Directory.Exists(path))) 
+			if (path != "" && (File.Exists(path) || Directory.Exists(path)))
 			{
-				string target = FollowLink(path);
+				var target = FollowLink(path);
 
-				shortcutPath = target;// path;
-				txtPath.Text = target;// path;
+				newShortcutPath = target;
+				txtPath.Text = target;
 				txtPath.Focus();
 				txtPath.Select(txtPath.Text.Length, 0);
 			}
 			else
 			{
-				MessageBox.Show("Unable to set the path."); // REMOVE ME LATER!
+				MessageBox.Show("Unable to set the path. Please drag in a file or a folder again.");
 			}
 		}
 
-        #endregion Private Methods
+		#endregion Private Methods
 
-        #region Public Methods
+		#region Public Methods
 
-        #endregion Public Methods
+		#endregion Public Methods
 
-        #region Handlers
-
-        private void btnBrowse_Click(object sender, EventArgs e)
-        {
-            if (ofd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-            {
-                if (ofd.CheckFileExists)
-                {
-                    SetPath(ofd.FileName);
-                }
-            }
-        }
+		#region Handlers
 
 		private void txtBatName_KeyDown(object sender, KeyEventArgs e)
 		{
@@ -228,81 +228,80 @@ namespace NoHassleShortcuts
 			}
 		}
 
-        private void btnCreateShortcut_Click(object sender, EventArgs e)
-        {
+		private void btnCreateShortcut_Click(object sender, EventArgs e)
+		{
 			Create(txtBatName.Text);
-        }
+		}
 
 		private void btnOpenShortcuts_Click(object sender, EventArgs e)
 		{
-			Process.Start("\"" + saveFolder + "\"");
+			Process.Start("\"" + shortcutsFolder + "\"");
 		}
 
-        #endregion Handlers
+		#region DragAndDrop Handlers
 
-        #region DragAndDrop Handlers
+		private void HandleDragEnter(object sender, DragEventArgs e)
+		{
+			Dragging.DragAndEnter(sender, e);
+		}
 
-        private void HandleDragEnter(object sender, DragEventArgs e)
-        {
-            Dragging.DragAndEnter(sender, e);
-        }
+		private void HandleDragDrop(object sender, DragEventArgs e)
+		{
+			SetPath(Dragging.GetDroppedFiles(sender, e).FirstOrDefault());
+		}
 
-        private void HandleDragDrop(object sender, DragEventArgs e)
-        {
-            string path = Dragging.GetDroppedFiles(sender, e).First();
-            SetPath(path);
-        }
+		private void MainForm_DragDrop(object sender, DragEventArgs e)
+		{
+			HandleDragDrop(sender, e);
+		}
 
-        private void MainForm_DragDrop(object sender, DragEventArgs e)
-        {
-            HandleDragDrop(sender, e);
-        }
+		private void MainForm_DragEnter(object sender, DragEventArgs e)
+		{
+			HandleDragEnter(sender, e);
+		}
 
-        private void MainForm_DragEnter(object sender, DragEventArgs e)
-        {
-            HandleDragEnter(sender, e);
-        }
+		private void txtPath_DragDrop(object sender, DragEventArgs e)
+		{
+			HandleDragDrop(sender, e);
+		}
 
-        private void txtPath_DragDrop(object sender, DragEventArgs e)
-        {
-            HandleDragDrop(sender, e);
-        }
+		private void txtPath_DragEnter(object sender, DragEventArgs e)
+		{
+			HandleDragEnter(sender, e);
+		}
 
-        private void txtPath_DragEnter(object sender, DragEventArgs e)
-        {
-            HandleDragEnter(sender, e);
-        }
+		private void lblStep1_DragDrop(object sender, DragEventArgs e)
+		{
+			HandleDragDrop(sender, e);
+		}
 
-        private void lblStep1_DragDrop(object sender, DragEventArgs e)
-        {
-            HandleDragDrop(sender, e);
-        }
+		private void lblStep1_DragEnter(object sender, DragEventArgs e)
+		{
+			HandleDragEnter(sender, e);
+		}
 
-        private void lblStep1_DragEnter(object sender, DragEventArgs e)
-        {
-            HandleDragEnter(sender, e);
-        }
+		private void btnBrowse_DragDrop(object sender, DragEventArgs e)
+		{
+			HandleDragDrop(sender, e);
+		}
 
-        private void btnBrowse_DragDrop(object sender, DragEventArgs e)
-        {
-            HandleDragDrop(sender, e);
-        }
+		private void btnBrowse_DragEnter(object sender, DragEventArgs e)
+		{
+			HandleDragEnter(sender, e);
+		}
 
-        private void btnBrowse_DragEnter(object sender, DragEventArgs e)
-        {
-            HandleDragEnter(sender, e);
-        }
+		private void lblStep2_DragDrop(object sender, DragEventArgs e)
+		{
+			HandleDragDrop(sender, e);
+		}
 
-        private void lblStep2_DragDrop(object sender, DragEventArgs e)
-        {
-            HandleDragDrop(sender, e);
-        }
+		private void lblStep2_DragEnter(object sender, DragEventArgs e)
+		{
+			HandleDragEnter(sender, e);
+		}
 
-        private void lblStep2_DragEnter(object sender, DragEventArgs e)
-        {
-            HandleDragEnter(sender, e);
-        }
+		#endregion DragAndDrop Handlers
 
-        #endregion DragAndDrop Handlers
-    }
+		#endregion Handlers
+	}
 }
