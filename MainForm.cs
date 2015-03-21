@@ -19,6 +19,8 @@ namespace NoHassleShortcuts
 
 		private string shortcutsFolder = "Shortcuts";
 		private string newShortcutPath = "";
+		private string newShortcutName = "";
+		private Admin.ShortcutType shortcutType = Admin.ShortcutType.Unknown;
 
 		#endregion Fields
 
@@ -74,33 +76,17 @@ namespace NoHassleShortcuts
 
 		#region Private Methods
 
-		private void Create(string newShortcut)
+		private void Create()
 		{
-			// Check fields for content
-			if (newShortcut == "")
-			{
-				MessageBox.Show("Please type the new shortcut name.");
-				return;
-			}
+			newShortcutPath = txtPath.Text;
+			newShortcutName = txtBatName.Text;
 
-			if (newShortcutPath == "")
+			if (!CheckValid())
 			{
-				MessageBox.Show("Please drag in a file or folder.");
-				return;
-			}
-
-			// Is dragged in content a file or a folder? Handle unknown type.
-			Admin.ShortcutType type = Admin.GetShortcutType(newShortcutPath);
-
-			if (type == Admin.ShortcutType.Unknown)
-			{
-				MessageBox.Show("Unable to detect a file or folder. Please try again.");
 				return;
 			}
 
 			btnCreateShortcut.Enabled = false;
-
-			newShortcut += ".bat";
 
 			// Create the shortcuts folder if it doesn't exist already
 			if (!Directory.Exists(shortcutsFolder))
@@ -109,7 +95,7 @@ namespace NoHassleShortcuts
 			}
 
 			// Create the .bat file to shortcuts folder
-			CreateBatFile(newShortcut, type);
+			CreateBatFile(newShortcutName, shortcutType);
 
 			// Make the user feel like something actually happened.... :P
 			System.Threading.Thread.Sleep(300);
@@ -117,11 +103,55 @@ namespace NoHassleShortcuts
 			btnCreateShortcut.Enabled = true;
 		}
 
-		private void CreateBatFile(string newShortcut, Admin.ShortcutType type)
+		private bool CheckValid()
+		{
+			// Check fields for content
+			if (newShortcutName == "")
+			{
+				MessageBox.Show("Please type the new shortcut name.");
+				return false;
+			}
+
+			newShortcutName += ".bat";
+
+			if (newShortcutPath == "")
+			{
+				MessageBox.Show("Please drag in a file or folder.");
+				return false;
+			}
+
+			// Is dragged in content a file or a folder? Handle unknown type.
+			shortcutType = Admin.GetShortcutType(newShortcutPath);
+
+			if (shortcutType == Admin.ShortcutType.Unknown)
+			{
+				MessageBox.Show("Unable to detect a file or folder. Please try again.");
+				return false;
+			}
+
+			return true;
+		}
+
+		private bool CreateBatFile(string newShortcut, Admin.ShortcutType type)
 		{
 			var pathOnly = Path.GetDirectoryName(newShortcutPath);
 			var filename = Path.GetFileName(newShortcutPath);
 			var savePath = Path.Combine(shortcutsFolder, newShortcut);
+
+			// Check if the shortcut file already exists
+			if (File.Exists(savePath))
+			{
+				DialogResult dr = MessageBox.Show(this, "This shortcut file already exists: " + 
+					Environment.NewLine + Environment.NewLine + 
+					"    " + savePath + Environment.NewLine + Environment.NewLine +
+					"Would you like to overwrite it with your new shortcut?", 
+					"Overwrite existing file?", MessageBoxButtons.OKCancel);
+
+				if (dr != System.Windows.Forms.DialogResult.OK)
+				{
+					return false;
+				}
+			}
 
 			// Create lines with comments and command based on type (file or folder)
 			List<string> lines = new List<string>();
@@ -144,6 +174,8 @@ namespace NoHassleShortcuts
 
 			// Write the file to the given save path
 			File.WriteAllLines(savePath, lines.ToArray());
+
+			return true;
 		}
 
 		private string FollowLink(string linkPath)
@@ -199,12 +231,14 @@ namespace NoHassleShortcuts
 			// Check if it exists
 			if (path != "" && (File.Exists(path) || Directory.Exists(path)))
 			{
-				var target = FollowLink(path);
+				// Follow the link (if it exists) and set the path textbox
+				txtPath.Text = FollowLink(path);
 
-				newShortcutPath = target;
-				txtPath.Text = target;
-				txtPath.Focus();
-				txtPath.Select(txtPath.Text.Length, 0);
+				// Focus on the shortcut name textbox
+				txtBatName.Focus();
+
+				// Activate this window (normally keeps focus on whatever was previously active)
+				Admin.ActivateThisWindow();
 			}
 			else
 			{
@@ -224,13 +258,13 @@ namespace NoHassleShortcuts
 		{
 			if (e.KeyCode == Keys.Enter)
 			{
-				Create(txtBatName.Text);
+				Create();
 			}
 		}
 
 		private void btnCreateShortcut_Click(object sender, EventArgs e)
 		{
-			Create(txtBatName.Text);
+			Create();
 		}
 
 		private void btnOpenShortcuts_Click(object sender, EventArgs e)
