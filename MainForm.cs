@@ -189,7 +189,6 @@ namespace NoHassleShortcuts
 			}
 
 			return "";
-			//return Link.ResolveLink(linkPath);
 		}
 
 		private void ListCurrentShortcuts() // TODO - After MVP is working....
