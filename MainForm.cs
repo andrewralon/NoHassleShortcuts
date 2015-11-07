@@ -245,15 +245,23 @@ namespace NoHassleShortcuts
 			}
 		}
 
-		#endregion Private Methods
+        #endregion Private Methods
 
-		#region Public Methods
+        #region Public Methods
 
-		#endregion Public Methods
+        #endregion Public Methods
 
-		#region Handlers
+        #region Handlers
 
-		private void txtBatName_KeyDown(object sender, KeyEventArgs e)
+        private void MainForm_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Escape)
+            {
+                Application.Exit();
+            }
+        }
+
+        private void txtBatName_KeyDown(object sender, KeyEventArgs e)
 		{
 			if (e.KeyCode == Keys.Enter)
 			{
@@ -333,8 +341,8 @@ namespace NoHassleShortcuts
 			HandleDragEnter(sender, e);
 		}
 
-		#endregion DragAndDrop Handlers
+        #endregion DragAndDrop Handlers
 
-		#endregion Handlers
-	}
+        #endregion Handlers
+    }
 }
