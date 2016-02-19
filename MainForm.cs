@@ -1,15 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Diagnostics;
-using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using TRLibrary;
+// ReSharper disable LocalizableElement
 
 namespace NoHassleShortcuts
 {
@@ -17,7 +13,7 @@ namespace NoHassleShortcuts
 	{
 		#region Fields
 
-		private string shortcutsFolder = "Shortcuts";
+		private string shortcutsFolder = "Shortcuts"; // TODO - Get this from the registry!
 		private string newShortcutPath = "";
 		private string newShortcutName = "";
 		private Admin.ShortcutType shortcutType = Admin.ShortcutType.Unknown;
@@ -31,9 +27,8 @@ namespace NoHassleShortcuts
 			InitializeComponent();
 
 			// Set the title and icon
-			this.Tag = this.Text;
-			this.Text += " " + Application.ProductVersion + " © " + DateTime.UtcNow.Year + " TeamRalon";
-			this.Icon = Properties.Resources.TR2_1024;
+			Text += " " + Application.ProductVersion + " © " + DateTime.UtcNow.Year + " TeamRalon";
+			Icon = Properties.Resources.TRfavicon;
 
 			// Set the first argument to the path of the shortcut
 			if (args.Length > 0)
@@ -95,7 +90,11 @@ namespace NoHassleShortcuts
 			}
 
 			// Create the .bat file to shortcuts folder
-			CreateBatFile(newShortcutName, shortcutType);
+			if (!CreateBatFile(newShortcutName, newShortcutPath, shortcutType))
+			{
+				MessageBox.Show("Unable to create shortcut file. Oops.");
+				return;
+			}
 
 			// Make the user feel like something actually happened.... :P
 			System.Threading.Thread.Sleep(300);
@@ -112,13 +111,13 @@ namespace NoHassleShortcuts
 				return false;
 			}
 
-			newShortcutName += ".bat";
-
 			if (newShortcutPath == "")
 			{
 				MessageBox.Show("Please drag in a file or folder.");
 				return false;
 			}
+
+			newShortcutName += ".bat";
 
 			// Is dragged in content a file or a folder? Handle unknown type.
 			shortcutType = Admin.GetShortcutType(newShortcutPath);
@@ -132,39 +131,55 @@ namespace NoHassleShortcuts
 			return true;
 		}
 
-		private bool CreateBatFile(string newShortcut, Admin.ShortcutType type)
+		private bool CreateBatFile(string shortcut, string target, Admin.ShortcutType shortcutType)
 		{
-			var pathOnly = Path.GetDirectoryName(newShortcutPath);
-			var filename = Path.GetFileName(newShortcutPath);
-			var savePath = Path.Combine(shortcutsFolder, newShortcut);
+			if (shortcutType == Admin.ShortcutType.Unknown)
+			{
+				return false;
+			}
+
+			string pathOnly = "";
+			string filename = "";
+			string savePath = Path.Combine(shortcutsFolder, shortcut);
 
 			// Check if the shortcut file already exists
 			if (File.Exists(savePath))
 			{
-				DialogResult dr = MessageBox.Show(this, "This shortcut file already exists: " + 
-					Environment.NewLine + Environment.NewLine + 
+				DialogResult dr = MessageBox.Show(this, "This shortcut file already exists: " +
+					Environment.NewLine + Environment.NewLine +
 					"    " + savePath + Environment.NewLine + Environment.NewLine +
-					"Would you like to overwrite it with your new shortcut?", 
-					"Overwrite existing file?", MessageBoxButtons.OKCancel);
+					"Would you like to overwrite it with your new shortcut?",
+					"Overwrite existing file?", MessageBoxButtons.YesNo);
 
-				if (dr != System.Windows.Forms.DialogResult.OK)
+				if (dr != DialogResult.Yes)
 				{
 					return false;
 				}
+			}
+
+			if (shortcutType != Admin.ShortcutType.Url) // File or Folder
+			{
+				pathOnly = Path.GetDirectoryName(newShortcutPath);
+				filename = Path.GetFileName(newShortcutPath);
 			}
 
 			// Create lines with comments and command based on type (file or folder)
 			List<string> lines = new List<string>();
 
 			lines.Add("@ECHO OFF");
-			lines.Add("REM " + this.Text);
+			lines.Add("REM " + Text);
 
-			if (type == Admin.ShortcutType.File)
+			if (shortcutType == Admin.ShortcutType.Url)
+			{
+				lines.Add("REM <url>\"" + savePath + "\"</url>");
+				lines.Add("START " + SanitizeBatAndCmdEscapeCharacters(target));
+			}
+			else if (shortcutType == Admin.ShortcutType.File)
 			{
 				lines.Add("REM <file>\"" + savePath + "\"</file>");
 				lines.Add("START \"\" /D \"" + pathOnly + "\" \"" + filename + "\"");
 			}
-			else if (type == Admin.ShortcutType.Folder)
+			else if (shortcutType == Admin.ShortcutType.Folder)
 			{
 				lines.Add("REM <folder>\"" + savePath + "\"</folder>");
 				lines.Add("\"%SystemRoot%\\explorer.exe\" \"" + newShortcutPath + "\"");
@@ -176,6 +191,18 @@ namespace NoHassleShortcuts
 			File.WriteAllLines(savePath, lines.ToArray());
 
 			return true;
+		}
+
+		private string SanitizeBatAndCmdEscapeCharacters(string target)
+		{
+			// TODO - USE REGEX INSTEAD!
+			// TODO - Check for ^& and %% in existing string instead of blindly replacing
+
+			// CMD uses & for commands, so replace it with ^&
+			target = target.Replace("&", "^&");
+
+			// Bat files use % for commands, so replace it with %%
+			return target.Replace("%", "%%");
 		}
 
 		private string FollowLink(string linkPath)
@@ -208,7 +235,7 @@ namespace NoHassleShortcuts
 				shortcuts.Add(Path.GetFileNameWithoutExtension(bat));
 			}
 
-			MessageBox.Show(String.Join(Environment.NewLine, shortcuts.ToArray()));
+			MessageBox.Show(string.Join(Environment.NewLine, shortcuts.ToArray()));
 
 			// If this absolutely fails, just open the shortcuts folder
 		}

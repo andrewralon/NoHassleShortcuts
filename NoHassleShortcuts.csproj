@@ -32,7 +32,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>Resources\TR2_1024.ico</ApplicationIcon>
+    <ApplicationIcon>Resources\TRfavicon.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -88,10 +88,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\TR_64x64_icon.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\TR2_1024.ico" />
+    <None Include="Resources\TRfavicon.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

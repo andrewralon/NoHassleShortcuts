@@ -17,6 +17,8 @@ namespace NoHassleShortcuts
         [STAThread]
         static void Main(string[] args)
         {
+			// TODO - Load the shortcuts folder path from the registry!
+
 			// Remove the "App" string from the un-merged application
 			var source = Assembly.GetEntryAssembly().Location.Replace("App.exe", ".exe");
 			var filename = Path.GetFileName(source);
