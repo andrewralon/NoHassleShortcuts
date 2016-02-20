@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using TRLibrary;
 
@@ -22,7 +19,7 @@ namespace NoHassleShortcuts
 			// Remove the "App" string from the un-merged application
 			var source = Assembly.GetEntryAssembly().Location.Replace("App.exe", ".exe");
 			var filename = Path.GetFileName(source);
-			var shortcuts = Path.Combine(Environment.GetEnvironmentVariable("SystemDrive") + "\\", "Shortcuts", filename);
+			var shortcuts = Environment.GetEnvironmentVariable("SystemDrive") + "\\" + "Shortcuts" + "\\" + filename;
 
 			var menu = "Make a new No Hassle Shortcut!";
 			var folder = "TeamRalon";
@@ -44,7 +41,6 @@ namespace NoHassleShortcuts
 			catch //(Exception ex)
 			{
 				// Ignore the possibility it can't overwrite itself (for now) and just move on
-
 				//MessageBox.Show("Unable to copy the file to this location: \"" + shortcuts + "\"" +
 				//	Environment.NewLine + Environment.NewLine +
 				//	ex.ToString());

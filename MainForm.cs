@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using TRLibrary;
+using ShortcutType = TRLibrary.Admin.ShortcutType;
 // ReSharper disable LocalizableElement
 
 namespace NoHassleShortcuts
@@ -13,10 +14,10 @@ namespace NoHassleShortcuts
 	{
 		#region Fields
 
-		private string shortcutsFolder = "Shortcuts"; // TODO - Get this from the registry!
-		private string newShortcutPath = "";
-		private string newShortcutName = "";
-		private Admin.ShortcutType shortcutType = Admin.ShortcutType.Unknown;
+		private string _shortcutsFolder = "Shortcuts"; // TODO - Get this from the registry!
+		private string _newShortcutPath = "";
+		private string _newShortcutName = "";
+		private ShortcutType _shortcutType = ShortcutType.Unknown;
 
 		#endregion Fields
 
@@ -26,16 +27,12 @@ namespace NoHassleShortcuts
 		{
 			InitializeComponent();
 
-			// Set the title and icon
-			Text += " " + Application.ProductVersion + " © " + DateTime.UtcNow.Year + " TeamRalon";
-			Icon = Properties.Resources.TRfavicon;
-
 			// Set the first argument to the path of the shortcut
 			if (args.Length > 0)
 			{
 				if (args[0] != "")
 				{
-					newShortcutPath = args[0];
+					_newShortcutPath = args[0];
 					txtPath.Text = args[0];
 					txtPath.Focus();
 					txtPath.Select(txtPath.Text.Length, 0);
@@ -55,16 +52,21 @@ namespace NoHassleShortcuts
 			}
 
 			// Set the path of the shortcuts folder
-			shortcutsFolder = Path.Combine(Environment.GetEnvironmentVariable("SystemDrive") + "\\", shortcutsFolder);
+			_shortcutsFolder = Environment.GetEnvironmentVariable("SystemDrive") + "\\" + _shortcutsFolder;
 
 			// Update the GUI with the shortcuts folder
 			lblStep3.Tag = lblStep3.Text;
-			lblStep3.Text += shortcutsFolder + ".";
+			lblStep3.Text += _shortcutsFolder + ".";
 
 			// Add the shortcuts folder to the system path if it's not already there
-			Admin.AddToPath(shortcutsFolder, true);
+			Admin.AddToPath(_shortcutsFolder, true);
+		}
 
-			//ListCurrentShortcuts();
+		private void MainForm_Load(object sender, EventArgs e)
+		{
+			// Set the title and icon
+			Text += " " + Application.ProductVersion + " © " + DateTime.UtcNow.Year + " TeamRalon";
+			Icon = Properties.Resources.TRfavicon;
 		}
 
 		#endregion Constructors
@@ -73,8 +75,8 @@ namespace NoHassleShortcuts
 
 		private void Create()
 		{
-			newShortcutPath = txtPath.Text;
-			newShortcutName = txtBatName.Text;
+			_newShortcutPath = txtPath.Text;
+			_newShortcutName = txtBatName.Text;
 
 			if (!CheckValid())
 			{
@@ -84,13 +86,13 @@ namespace NoHassleShortcuts
 			btnCreateShortcut.Enabled = false;
 
 			// Create the shortcuts folder if it doesn't exist already
-			if (!Directory.Exists(shortcutsFolder))
+			if (!Directory.Exists(_shortcutsFolder))
 			{
-				Directory.CreateDirectory(shortcutsFolder);
+				Directory.CreateDirectory(_shortcutsFolder);
 			}
 
 			// Create the .bat file to shortcuts folder
-			if (!CreateBatFile(newShortcutName, newShortcutPath, shortcutType))
+			if (!CreateBatFile(_newShortcutName, _newShortcutPath, _shortcutType))
 			{
 				MessageBox.Show("Unable to create shortcut file. Oops.");
 				return;
@@ -105,24 +107,24 @@ namespace NoHassleShortcuts
 		private bool CheckValid()
 		{
 			// Check fields for content
-			if (newShortcutName == "")
+			if (_newShortcutName == "")
 			{
 				MessageBox.Show("Please type the new shortcut name.");
 				return false;
 			}
 
-			if (newShortcutPath == "")
+			if (_newShortcutPath == "")
 			{
 				MessageBox.Show("Please drag in a file or folder.");
 				return false;
 			}
 
-			newShortcutName += ".bat";
+			_newShortcutName += ".bat";
 
 			// Is dragged in content a file or a folder? Handle unknown type.
-			shortcutType = Admin.GetShortcutType(newShortcutPath);
+			_shortcutType = Admin.GetShortcutType(_newShortcutPath);
 
-			if (shortcutType == Admin.ShortcutType.Unknown)
+			if (_shortcutType == ShortcutType.Unknown)
 			{
 				MessageBox.Show("Unable to detect a file or folder. Please try again.");
 				return false;
@@ -131,23 +133,24 @@ namespace NoHassleShortcuts
 			return true;
 		}
 
-		private bool CreateBatFile(string shortcut, string target, Admin.ShortcutType shortcutType)
+		private bool CreateBatFile(string shortcut, string target, ShortcutType shortcutType)
 		{
-			if (shortcutType == Admin.ShortcutType.Unknown)
+			if (shortcutType == ShortcutType.Unknown)
 			{
 				return false;
 			}
 
 			string pathOnly = "";
 			string filename = "";
-			string savePath = Path.Combine(shortcutsFolder, shortcut);
+			string savePath = Path.Combine(_shortcutsFolder, shortcut);
 
 			// Check if the shortcut file already exists
 			if (File.Exists(savePath))
 			{
 				DialogResult dr = MessageBox.Show(this, "This shortcut file already exists: " +
 					Environment.NewLine + Environment.NewLine +
-					"    " + savePath + Environment.NewLine + Environment.NewLine +
+					"    " + savePath + 
+					Environment.NewLine + Environment.NewLine +
 					"Would you like to overwrite it with your new shortcut?",
 					"Overwrite existing file?", MessageBoxButtons.YesNo);
 
@@ -157,32 +160,31 @@ namespace NoHassleShortcuts
 				}
 			}
 
-			if (shortcutType != Admin.ShortcutType.Url) // File or Folder
+			if (shortcutType != ShortcutType.Url) // File or Folder
 			{
-				pathOnly = Path.GetDirectoryName(newShortcutPath);
-				filename = Path.GetFileName(newShortcutPath);
+				pathOnly = Path.GetDirectoryName(_newShortcutPath);
+				filename = Path.GetFileName(_newShortcutPath);
 			}
 
 			// Create lines with comments and command based on type (file or folder)
 			List<string> lines = new List<string>();
-
 			lines.Add("@ECHO OFF");
 			lines.Add("REM " + Text);
 
-			if (shortcutType == Admin.ShortcutType.Url)
+			if (shortcutType == ShortcutType.Url)
 			{
-				lines.Add("REM <url>\"" + savePath + "\"</url>");
+				lines.Add("REM <url>" + savePath + "</url>");
 				lines.Add("START " + SanitizeBatAndCmdEscapeCharacters(target));
 			}
-			else if (shortcutType == Admin.ShortcutType.File)
+			else if (shortcutType == ShortcutType.File)
 			{
-				lines.Add("REM <file>\"" + savePath + "\"</file>");
+				lines.Add("REM <file>" + savePath + "</file>");
 				lines.Add("START \"\" /D \"" + pathOnly + "\" \"" + filename + "\"");
 			}
-			else if (shortcutType == Admin.ShortcutType.Folder)
+			else if (shortcutType == ShortcutType.Folder)
 			{
-				lines.Add("REM <folder>\"" + savePath + "\"</folder>");
-				lines.Add("\"%SystemRoot%\\explorer.exe\" \"" + newShortcutPath + "\"");
+				lines.Add("REM <folder>" + savePath + "</folder>");
+				lines.Add("\"%SystemRoot%\\explorer.exe\" \"" + _newShortcutPath + "\"");
 			}
 
 			lines.Add("EXIT");
@@ -210,43 +212,9 @@ namespace NoHassleShortcuts
 			// If it's a shortcut, follow it!
 			var target = Shell.FollowShortcut(linkPath);
 
-			if (File.Exists(target) || Directory.Exists(target))
+			if (File.Exists(target) || Directory.Exists(target) || Admin.IsValidUrl(target))
 			{
 				return target;
-			}
-
-			return "";
-		}
-
-		private void ListCurrentShortcuts() // TODO - After MVP is working....
-		{
-			var bats = Directory.GetFiles(shortcutsFolder, "*.bat", SearchOption.TopDirectoryOnly);
-
-			List<string> shortcuts = new List<string>();
-
-			shortcuts.Add("Shortcut, File, Path");
-			shortcuts.Add("--------------------");
-
-			List<string> filenames = new List<string>();
-
-			foreach (var bat in bats)
-			{
-				filenames.Add(GetFilename(bat));
-				shortcuts.Add(Path.GetFileNameWithoutExtension(bat));
-			}
-
-			MessageBox.Show(string.Join(Environment.NewLine, shortcuts.ToArray()));
-
-			// If this absolutely fails, just open the shortcuts folder
-		}
-
-		private string GetFilename(string path) // TODO - After MVP is working....
-		{
-			var lines = File.ReadAllLines(path);
-
-			foreach (var line in lines)
-			{
-
 			}
 
 			return "";
@@ -255,7 +223,8 @@ namespace NoHassleShortcuts
 		private void SetPath(string path)
 		{
 			// Check if it exists
-			if (path != "" && (File.Exists(path) || Directory.Exists(path)))
+			if (path != "" && 
+				(File.Exists(path) || Directory.Exists(path) || Admin.IsValidUrl(path)))
 			{
 				// Follow the link (if it exists) and set the path textbox
 				txtPath.Text = FollowLink(path);
@@ -268,27 +237,65 @@ namespace NoHassleShortcuts
 			}
 			else
 			{
-				MessageBox.Show("Unable to set the path. Please drag in a file or a folder again.");
+				MessageBox.Show("Unable to set the path. Please drag in or paste a file, folder, or URL again.");
 			}
 		}
 
-        #endregion Private Methods
+		#region Future Features
 
-        #region Public Methods
+		//private void ListCurrentShortcuts() // TODO - Later....
+		//{
+		//	var bats = Directory.GetFiles(_shortcutsFolder, "*.bat", SearchOption.TopDirectoryOnly);
 
-        #endregion Public Methods
+		//	List<string> shortcuts = new List<string>();
 
-        #region Handlers
+		//	shortcuts.Add("Shortcut, File, Path");
+		//	shortcuts.Add("--------------------");
 
-        private void MainForm_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.KeyCode == Keys.Escape)
-            {
-                Application.Exit();
-            }
-        }
+		//	List<string> filenames = new List<string>();
 
-        private void txtBatName_KeyDown(object sender, KeyEventArgs e)
+		//	foreach (var bat in bats)
+		//	{
+		//		filenames.Add(GetFilename(bat));
+		//		shortcuts.Add(Path.GetFileNameWithoutExtension(bat));
+		//	}
+
+		//	MessageBox.Show(string.Join(Environment.NewLine, shortcuts.ToArray()));
+
+		//	// If this absolutely fails, just open the shortcuts folder
+		//}
+
+		//private string GetFilename(string path) // TODO - Later....
+		//{
+		//	var lines = File.ReadAllLines(path);
+
+		//	foreach (var line in lines)
+		//	{
+
+		//	}
+
+		//	return "";
+		//}
+
+		#endregion Future Features
+
+		#endregion Private Methods
+
+		#region Public Methods
+
+		#endregion Public Methods
+
+		#region Handlers
+
+		private void MainForm_KeyDown(object sender, KeyEventArgs e)
+		{
+			if (e.KeyCode == Keys.Escape)
+			{
+				Application.Exit();
+			}
+		}
+
+		private void txtBatName_KeyDown(object sender, KeyEventArgs e)
 		{
 			if (e.KeyCode == Keys.Enter)
 			{
@@ -303,7 +310,7 @@ namespace NoHassleShortcuts
 
 		private void btnOpenShortcuts_Click(object sender, EventArgs e)
 		{
-			Process.Start("\"" + shortcutsFolder + "\"");
+			Process.Start("\"" + _shortcutsFolder + "\"");
 		}
 
 		#region DragAndDrop Handlers
@@ -348,16 +355,6 @@ namespace NoHassleShortcuts
 			HandleDragEnter(sender, e);
 		}
 
-		private void btnBrowse_DragDrop(object sender, DragEventArgs e)
-		{
-			HandleDragDrop(sender, e);
-		}
-
-		private void btnBrowse_DragEnter(object sender, DragEventArgs e)
-		{
-			HandleDragEnter(sender, e);
-		}
-
 		private void lblStep2_DragDrop(object sender, DragEventArgs e)
 		{
 			HandleDragDrop(sender, e);
@@ -368,8 +365,8 @@ namespace NoHassleShortcuts
 			HandleDragEnter(sender, e);
 		}
 
-        #endregion DragAndDrop Handlers
+		#endregion DragAndDrop Handlers
 
-        #endregion Handlers
-    }
+		#endregion Handlers
+	}
 }
