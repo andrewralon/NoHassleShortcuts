@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Windows.Forms;
 using TRLibrary;
 using ShortcutType = TRLibrary.Admin.ShortcutType;
@@ -95,6 +96,7 @@ namespace NoHassleShortcuts
 			if (!CreateBatFile(_newShortcutName, _newShortcutPath, _shortcutType))
 			{
 				MessageBox.Show("Unable to create shortcut file. Oops.");
+                btnCreateShortcut.Enabled = true;
 				return;
 			}
 
@@ -166,31 +168,31 @@ namespace NoHassleShortcuts
 				filename = Path.GetFileName(_newShortcutPath);
 			}
 
-			// Create lines with comments and command based on type (file or folder)
+            // Create lines with comments and command based on type (file or folder)
+            string shortcutTypeLower = shortcutType.ToString().ToLower();
 			List<string> lines = new List<string>();
 			lines.Add("@ECHO OFF");
 			lines.Add("REM " + Text);
+            lines.Add("REM <" + shortcutTypeLower + ">" + savePath + "</" + shortcutTypeLower + ">");
+            //lines.Add("CHCP 65001>NUL");
 
 			if (shortcutType == ShortcutType.Url)
 			{
-				lines.Add("REM <url>" + savePath + "</url>");
 				lines.Add("START " + SanitizeBatAndCmdEscapeCharacters(target));
 			}
 			else if (shortcutType == ShortcutType.File)
 			{
-				lines.Add("REM <file>" + savePath + "</file>");
 				lines.Add("START \"\" /D \"" + pathOnly + "\" \"" + filename + "\"");
 			}
 			else if (shortcutType == ShortcutType.Folder)
 			{
-				lines.Add("REM <folder>" + savePath + "</folder>");
 				lines.Add("\"%SystemRoot%\\explorer.exe\" \"" + _newShortcutPath + "\"");
 			}
 
 			lines.Add("EXIT");
 
-			// Write the file to the given save path
-			File.WriteAllLines(savePath, lines.ToArray());
+            // Write the file to the given save path
+            File.WriteAllLines(savePath, lines.ToArray()); //, Encoding.UTF8);
 
 			return true;
 		}
