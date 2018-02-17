@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 using TRLibrary;
 using ShortcutType = TRLibrary.Admin.ShortcutType;
@@ -170,13 +169,15 @@ namespace NoHassleShortcuts
 
             // Create lines with comments and command based on type (file or folder)
             string shortcutTypeLower = shortcutType.ToString().ToLower();
-			List<string> lines = new List<string>();
-			lines.Add("@ECHO OFF");
-			lines.Add("REM " + Text);
-            lines.Add("REM <" + shortcutTypeLower + ">" + savePath + "</" + shortcutTypeLower + ">");
+            List<string> lines = new List<string>
+            {
+                "@ECHO OFF",
+                "REM " + Text,
+                "REM <" + shortcutTypeLower + ">" + savePath + "</" + shortcutTypeLower + ">"
+            };
             //lines.Add("CHCP 65001>NUL");
 
-			if (shortcutType == ShortcutType.Url)
+            if (shortcutType == ShortcutType.Url)
 			{
 				lines.Add("START " + SanitizeBatAndCmdEscapeCharacters(target));
 			}
@@ -243,44 +244,6 @@ namespace NoHassleShortcuts
 			}
 		}
 
-		#region Future Features
-
-		//private void ListCurrentShortcuts() // TODO - Later....
-		//{
-		//	var bats = Directory.GetFiles(_shortcutsFolder, "*.bat", SearchOption.TopDirectoryOnly);
-
-		//	List<string> shortcuts = new List<string>();
-
-		//	shortcuts.Add("Shortcut, File, Path");
-		//	shortcuts.Add("--------------------");
-
-		//	List<string> filenames = new List<string>();
-
-		//	foreach (var bat in bats)
-		//	{
-		//		filenames.Add(GetFilename(bat));
-		//		shortcuts.Add(Path.GetFileNameWithoutExtension(bat));
-		//	}
-
-		//	MessageBox.Show(string.Join(Environment.NewLine, shortcuts.ToArray()));
-
-		//	// If this absolutely fails, just open the shortcuts folder
-		//}
-
-		//private string GetFilename(string path) // TODO - Later....
-		//{
-		//	var lines = File.ReadAllLines(path);
-
-		//	foreach (var line in lines)
-		//	{
-
-		//	}
-
-		//	return "";
-		//}
-
-		#endregion Future Features
-
 		#endregion Private Methods
 
 		#region Public Methods
@@ -297,7 +260,7 @@ namespace NoHassleShortcuts
 			}
 		}
 
-		private void txtBatName_KeyDown(object sender, KeyEventArgs e)
+		private void TxtBatName_KeyDown(object sender, KeyEventArgs e)
 		{
 			if (e.KeyCode == Keys.Enter)
 			{
@@ -305,12 +268,12 @@ namespace NoHassleShortcuts
 			}
 		}
 
-		private void btnCreateShortcut_Click(object sender, EventArgs e)
+		private void BtnCreateShortcut_Click(object sender, EventArgs e)
 		{
 			Create();
 		}
 
-		private void btnOpenShortcuts_Click(object sender, EventArgs e)
+		private void BtnOpenShortcuts_Click(object sender, EventArgs e)
 		{
 			Process.Start("\"" + _shortcutsFolder + "\"");
 		}
@@ -337,32 +300,32 @@ namespace NoHassleShortcuts
 			HandleDragEnter(sender, e);
 		}
 
-		private void txtPath_DragDrop(object sender, DragEventArgs e)
+		private void TxtPath_DragDrop(object sender, DragEventArgs e)
 		{
 			HandleDragDrop(sender, e);
 		}
 
-		private void txtPath_DragEnter(object sender, DragEventArgs e)
+		private void TxtPath_DragEnter(object sender, DragEventArgs e)
 		{
 			HandleDragEnter(sender, e);
 		}
 
-		private void lblStep1_DragDrop(object sender, DragEventArgs e)
+		private void LblStep1_DragDrop(object sender, DragEventArgs e)
 		{
 			HandleDragDrop(sender, e);
 		}
 
-		private void lblStep1_DragEnter(object sender, DragEventArgs e)
+		private void LblStep1_DragEnter(object sender, DragEventArgs e)
 		{
 			HandleDragEnter(sender, e);
 		}
 
-		private void lblStep2_DragDrop(object sender, DragEventArgs e)
+		private void LblStep2_DragDrop(object sender, DragEventArgs e)
 		{
 			HandleDragDrop(sender, e);
 		}
 
-		private void lblStep2_DragEnter(object sender, DragEventArgs e)
+		private void LblStep2_DragEnter(object sender, DragEventArgs e)
 		{
 			HandleDragEnter(sender, e);
 		}

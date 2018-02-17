@@ -47,8 +47,8 @@
 			this.lblStep1.Size = new System.Drawing.Size(287, 20);
 			this.lblStep1.TabIndex = 0;
 			this.lblStep1.Text = "1. Drag in or paste a file, folder, or URL.";
-			this.lblStep1.DragDrop += new System.Windows.Forms.DragEventHandler(this.lblStep1_DragDrop);
-			this.lblStep1.DragEnter += new System.Windows.Forms.DragEventHandler(this.lblStep1_DragEnter);
+			this.lblStep1.DragDrop += new System.Windows.Forms.DragEventHandler(this.LblStep1_DragDrop);
+			this.lblStep1.DragEnter += new System.Windows.Forms.DragEventHandler(this.LblStep1_DragEnter);
 			// 
 			// txtPath
 			// 
@@ -56,8 +56,8 @@
 			this.txtPath.Name = "txtPath";
 			this.txtPath.Size = new System.Drawing.Size(332, 26);
 			this.txtPath.TabIndex = 5;
-			this.txtPath.DragDrop += new System.Windows.Forms.DragEventHandler(this.txtPath_DragDrop);
-			this.txtPath.DragEnter += new System.Windows.Forms.DragEventHandler(this.txtPath_DragEnter);
+			this.txtPath.DragDrop += new System.Windows.Forms.DragEventHandler(this.TxtPath_DragDrop);
+			this.txtPath.DragEnter += new System.Windows.Forms.DragEventHandler(this.TxtPath_DragEnter);
 			// 
 			// txtBatName
 			// 
@@ -66,7 +66,7 @@
 			this.txtBatName.Size = new System.Drawing.Size(127, 26);
 			this.txtBatName.TabIndex = 15;
 			this.txtBatName.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-			this.txtBatName.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtBatName_KeyDown);
+			this.txtBatName.KeyDown += new System.Windows.Forms.KeyEventHandler(this.TxtBatName_KeyDown);
 			// 
 			// lblStep2
 			// 
@@ -76,8 +76,8 @@
 			this.lblStep2.Size = new System.Drawing.Size(254, 20);
 			this.lblStep2.TabIndex = 3;
 			this.lblStep2.Text = "2. Choose a name for the shortcut.";
-			this.lblStep2.DragDrop += new System.Windows.Forms.DragEventHandler(this.lblStep2_DragDrop);
-			this.lblStep2.DragEnter += new System.Windows.Forms.DragEventHandler(this.lblStep2_DragEnter);
+			this.lblStep2.DragDrop += new System.Windows.Forms.DragEventHandler(this.LblStep2_DragDrop);
+			this.lblStep2.DragEnter += new System.Windows.Forms.DragEventHandler(this.LblStep2_DragEnter);
 			// 
 			// lblBatExtension
 			// 
@@ -97,7 +97,7 @@
 			this.btnCreateShortcut.TabIndex = 25;
 			this.btnCreateShortcut.Text = "Create Shortcut";
 			this.btnCreateShortcut.UseVisualStyleBackColor = true;
-			this.btnCreateShortcut.Click += new System.EventHandler(this.btnCreateShortcut_Click);
+			this.btnCreateShortcut.Click += new System.EventHandler(this.BtnCreateShortcut_Click);
 			// 
 			// lblStep3
 			// 
@@ -126,7 +126,7 @@
 			this.btnOpenShortcuts.TabIndex = 26;
 			this.btnOpenShortcuts.Text = "Open Shortcuts";
 			this.btnOpenShortcuts.UseVisualStyleBackColor = true;
-			this.btnOpenShortcuts.Click += new System.EventHandler(this.btnOpenShortcuts_Click);
+			this.btnOpenShortcuts.Click += new System.EventHandler(this.BtnOpenShortcuts_Click);
 			// 
 			// MainForm
 			// 
